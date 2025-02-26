@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Concentración</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 500px;
+        }
+        .word-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            justify-items: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .word {
+            width: 80px;
+            height: 80px;
+            background-color: #4CAF50;
+            color: transparent;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .flipped {
+            color: white;
+            background-color: #FF9800;
+            pointer-events: none;
+            transform: rotate(0deg) !important;
+        }
+        .hidden {
+            display: none;
+        }
+        .blue {
+            color: #2196F3;
+        }
+        .red {
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Juego de Concentración de Palabras</h1>
+        <p>Haz clic en las palabras para descubrirlas y emparejarlas.</p>
+        <div class="word-container"></div>
+        <div class="review-container hidden">
+            <p id="reviewSentence"></p>
+            <button onclick="checkAnswer(true)">Sí</button>
+            <button onclick="checkAnswer(false)">No</button>
+        </div>
+    </div>
+    <script>
+        const words = ['played', 'watched', 'studied', 'traveled', 'bought'];
+        let wordList = [...words, ...words];
+        let flippedWords = [];
+        let matchedWords = [];
+        let currentWord = "";
+        const wordContainer = document.querySelector('.word-container');
+        const reviewContainer = document.querySelector('.review-container');
+        const reviewSentence = document.getElementById('reviewSentence');
+
+        const sentences = {
+            'studied': ["I studied for the math test last night."],
+            'traveled': ["They traveled to Paris last summer."],
+            'bought': ["She bought a beautiful dress at the mall."],
+            'played': ["He play video games all afternoon."],
+            'watched': ["We watch a soccer game on TV."]
+        };
+
+        function shuffleWords() {
+            let unpairedWords = wordList.filter(word => !matchedWords.includes(word));
+            unpairedWords.sort(() => Math.random() - 0.5);
+            wordList = [...matchedWords, ...unpairedWords];
+            createWords();
+        }
+
+        function createWords() {
+            wordContainer.innerHTML = '';
+            wordList.forEach(word => {
+                const div = document.createElement('div');
+                div.classList.add('word');
+                div.dataset.word = word;
+                div.textContent = matchedWords.includes(word) ? word : '?';
+                if (matchedWords.includes(word)) div.classList.add('flipped');
+                div.onclick = () => flipWord(div);
+                wordContainer.appendChild(div);
+            });
+        }
+
+        function flipWord(element) {
+            if (flippedWords.length === 2 || element.classList.contains('flipped')) return;
+            element.classList.add('flipped');
+            element.textContent = element.dataset.word;
+            flippedWords.push(element);
+
+            if (flippedWords.length === 2) {
+                if (flippedWords[0].dataset.word === flippedWords[1].dataset.word) {
+                    matchedWords.push(flippedWords[0].dataset.word);
+                    currentWord = flippedWords[0].dataset.word;
+                    flippedWords = [];
+                    showReviewSentence(currentWord);
+                    if (matchedWords.length === words.length) setTimeout(() => alert('¡Felicidades, has ganado!'), 500);
+                } else {
+                    setTimeout(() => {
+                        flippedWords.forEach(el => {
+                            el.classList.remove('flipped');
+                            el.textContent = '?';
+                        });
+                        flippedWords = [];
+                        shuffleWords();
+                    }, 1000);
+                }
+            }
+        }
+
+        function showReviewSentence(word) {
+            reviewSentence.textContent = sentences[word][0];
+            reviewSentence.classList.remove('blue', 'red');
+            reviewContainer.classList.remove('hidden');
+        }
+
+        function checkAnswer(isCorrect) {
+            const correctWords = ["played", "watched"];
+            const incorrectWords = ["studied", "traveled", "bought"];
+
+            if ((isCorrect && correctWords.includes(currentWord)) || (!isCorrect && incorrectWords.includes(currentWord))) {
+                reviewSentence.classList.add('blue');
+            } else {
+                reviewSentence.classList.add('red');
+            }
+            setTimeout(() => reviewContainer.classList.add('hidden'), 2000);
+        }
+
+        shuffleWords();
+    </script>
+</body>
+</html>
